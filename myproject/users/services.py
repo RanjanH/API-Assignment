@@ -3,8 +3,8 @@ from .models import User
 def create_user(uname, email, password, fname, lname):
     return User.objects.create(username=uname, email=email, password=password,fname=fname,lname=lname)
 
-def update_user(data):
-    user = User.objects.get(id=int(data['user_id']))
+def update_user(pk, data):
+    user = User.objects.get(id=pk)
     if data['username']:
         user.username = data['username']
     if data['email']:

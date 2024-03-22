@@ -1,11 +1,12 @@
 #from django.shortcuts import render
-
+import json
 from django.http import HttpResponse
 from rest_framework.decorators import APIView
 from rest_framework.response import Response
 from .models import User
 from .serializers import userSerializer
 from .services import create_user, update_user, delete_user, get_user, get_all_users
+from django.core.exceptions import BadRequest
 
 def users(request):
     return HttpResponse("Hello There!")
@@ -28,15 +29,24 @@ class normal(APIView):
     def post(self, request):
         data = request.data
         try:
-            user = create_user(data['username'], data['email'], data['password'], data['fname'], data['lname'])
-            return Response({'message': 'User created successfully', 'user_id': user.id})
-        except Exception as e:
-            return Response({"error":str(e)})
+            if User.objects.filter(username=data['username']).exists() or User.objects.filter(email=data['email']).exists():
+                return Response({'error':'User already exists'})
+            else:
+                raise User.DoesNotExist
+        except User.DoesNotExist:
+                user = create_user(data['username'], data['email'], data['password'], data['fname'], data['lname'])
+                return Response({'message': 'User created successfully', 'user_id': user.id})
+        except:
+            raise BadRequest('Invalid request.')
         
     def put(self, request, pk):
-        data = request.body
-        user = update_user(data)
-        return Response({'message':'User Updated successfully', 'username':user.username,'fname':user.fname,'lname':user.lname})
+        try:
+            user = User.objects.get(id=pk)
+            data = request.body
+            user = update_user(pk, json.loads(data))
+            return Response({'message':'User Updated successfully', 'username':user.username,'fname':user.fname,'lname':user.lname})
+        except User.DoesNotExist:
+            return Response({'error':'User Not Found'})
 
 class caching(APIView):
 
