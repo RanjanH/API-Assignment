@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from rest_framework.decorators import APIView
 from rest_framework.response import Response
 from .models import User
+from .serializers import userSerializer
 from .services import create_user, update_user, delete_user, get_user, get_all_users
 
 def users(request):
@@ -11,15 +12,20 @@ def users(request):
 
 class normal(APIView):
 
-    def get(self, request,pk):
+    def get(self, request, pk=None):
         try:
-            user = User.objects.get(pk=pk)
-            print(type(user))
-            return Response({'username':user.username,'fname':user.fname,'lname':user.lname})
+            if pk:
+                user = User.objects.get(pk=pk)
+                serializer = userSerializer(user)
+                return Response(serializer.data)
+            else:
+                users = User.objects.all()
+                serializer = userSerializer(users,many=True)
+                return Response(serializer.data)
         except User.DoesNotExist:
             return Response({'error':'User Not Found'})
         
-    def post(self,request):
+    def post(self, request):
         data = request.data
         try:
             user = create_user(data['username'], data['email'], data['password'], data['fname'], data['lname'])
@@ -27,7 +33,7 @@ class normal(APIView):
         except Exception as e:
             return Response({"error":str(e)})
         
-    def put(self,request):
+    def put(self, request, pk):
         data = request.body
         user = update_user(data)
         return Response({'message':'User Updated successfully', 'username':user.username,'fname':user.fname,'lname':user.lname})
