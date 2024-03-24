@@ -22,7 +22,15 @@ def delete_user(user_id):
     User.objects.filter(id=user_id).delete()
 
 def get_user(user_id):
-    return User.objects.get(id=user_id)
+    try:
+        user = User.objects.get(id=user_id)
+        return user
+    except User.DoesNotExist:
+        return {'error':'User Does not exist'}
 
 def get_all_users():
-    return User.objects.all()
+    users = User.objects.all()
+    if len(users) > 0:
+        return users
+    else:
+        return {'message':'No users registered'}
