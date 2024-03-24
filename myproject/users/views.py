@@ -13,19 +13,20 @@ from .cacheServices import store_data_in_cache,retrieve_data_from_cache
 def users(request):
     return HttpResponse("Hello There!")
 
+# Normal API
 class normal(APIView):
 
     def get(self, request, pk=None):
         try:
             if pk:
                 user = get_user(pk)
-                if 'error' in user.keys():
+                if hasattr(user,'keys'):
                     return Response(user)
                 serializer = userSerializer(user)
                 return Response(serializer.data)
             else:
                 users = get_all_users()
-                if 'message' in users.keys():
+                if hasattr(users,'keys'):
                     return Response(users)
                 serializer = userSerializer(users,many=True)
                 return Response(serializer.data)
@@ -54,15 +55,20 @@ class normal(APIView):
         except User.DoesNotExist:
             return Response({'error':'User Not Found'})
 
+# Caching API
 class caching(APIView):
 
     def get(self, request, pk=None):
         if pk:
             data = retrieve_data_from_cache(pk)
+            if hasattr(data,'keys'):
+                    return Response(data)
             serialized = userSerializer(data)
             return Response(serialized.data)
         else:
             return Response(data="Invalid request - Add user id after 'caching/' ", status=status.HTTP_400_BAD_REQUEST)
+
+# Sharding API
 class sharding(APIView):
 
     def get(self, request, pk):
