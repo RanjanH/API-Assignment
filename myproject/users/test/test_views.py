@@ -5,16 +5,15 @@ from django.urls import reverse
 from ..models import User
 from ..serializers import userSerializer
 
-
 # initialize the APIClient app
 client = Client()
 
 class normalTest(TestCase):
     def setUp(self):
-        User.objects.create(username='testing1',email='testing1@gmail.com',password='testing',fname='test1',lname='really')
-        User.objects.create(username='testing2',email='testing2@gmail.com',password='testing',fname='test2',lname='really')
-        User.objects.create(username='testing3',email='testing3@gmail.com',password='testing',fname='test3',lname='really')
-        User.objects.create(username='testing4',email='testing4@gmail.com',password='testing',fname='test4',lname='really')
+        User.objects.create(username='testing1',email='testing1@gmail.com',fname='test1',lname='really')
+        User.objects.create(username='testing2',email='testing2@gmail.com',fname='test2',lname='really')
+        User.objects.create(username='testing3',email='testing3@gmail.com',fname='test3',lname='really')
+        User.objects.create(username='testing4',email='testing4@gmail.com',fname='test4',lname='really')
 
     def test_get_all_users(self):
         response = client.get(reverse('normal'))
@@ -52,15 +51,15 @@ class normalTest(TestCase):
 
 class cachingTest(TestCase):
     def setUp(self):
-        User.objects.create(username='testing1',email='testing1@gmail.com',password='testing',fname='test1',lname='really')
-        User.objects.create(username='testing2',email='testing2@gmail.com',password='testing',fname='test2',lname='really')
-        User.objects.create(username='testing3',email='testing3@gmail.com',password='testing',fname='test3',lname='really')
-        User.objects.create(username='testing4',email='testing4@gmail.com',password='testing',fname='test4',lname='really')
+        User.objects.create(username='testing1',email='testing1@gmail.com',fname='test1',lname='really')
+        User.objects.create(username='testing2',email='testing2@gmail.com',fname='test2',lname='really')
+        User.objects.create(username='testing3',email='testing3@gmail.com',fname='test3',lname='really')
+        User.objects.create(username='testing4',email='testing4@gmail.com',fname='test4',lname='really')
 
     def test_get_one_user(self):
         for i in range(1,5):
             user = User.objects.get(username='testing'+str(i))
             response = client.get(reverse('caching')+str(user.id))
             serializer = userSerializer(user)
-            self.assertEqual(serializer.data, response.data)
+            self.assertEqual(serializer.data, response.data[0])
             self.assertEqual(response.status_code, status.HTTP_200_OK)

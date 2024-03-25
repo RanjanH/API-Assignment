@@ -41,7 +41,7 @@ class normal(APIView):
             else:
                 raise User.DoesNotExist
         except User.DoesNotExist:
-                user = create_user(data['username'], data['email'], data['password'], data['fname'], data['lname'])
+                user = create_user(data['username'], data['email'], data['fname'], data['lname'])
                 return Response({'message': 'User created successfully', 'user_id': user.id})
         except:
             raise BadRequest('Invalid request.')
@@ -54,17 +54,24 @@ class normal(APIView):
             return Response({'message':'User Updated successfully', 'username':user.username,'fname':user.fname,'lname':user.lname})
         except User.DoesNotExist:
             return Response({'error':'User Not Found'})
+        
+    def delete(self, request, pk):
+        try:
+            User.objects.get(id=pk)
+            return Response(delete_user(pk))
+        except User.DoesNotExist:
+            return Response({'error':'User does not exist'})
 
 # Caching API
 class caching(APIView):
 
     def get(self, request, pk=None):
         if pk:
-            data = retrieve_data_from_cache(pk)
+            data,flag = retrieve_data_from_cache(pk)
             if hasattr(data,'keys'):
                     return Response(data)
             serialized = userSerializer(data)
-            return Response(serialized.data)
+            return Response([serialized.data,{'Found in cache':flag}])
         else:
             return Response(data="Invalid request - Add user id after 'caching/' ", status=status.HTTP_400_BAD_REQUEST)
 
@@ -80,5 +87,5 @@ class sharding(APIView):
         
     def post(self,request):
         data = request.data
-        user = create_user(data['username'], data['email'], data['password'], data['fname'], data['lname'])
+        user = create_user(data['username'], data['email'], data['password'], data['fname'], data['lname'],'shard')
         return Response({'message': 'User created successfully', 'user_id': user.id})
