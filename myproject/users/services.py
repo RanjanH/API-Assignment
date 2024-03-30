@@ -1,35 +1,126 @@
 from .models import User
+from django.core.cache import cache
 
-def get_user(user_id):
-    try:
-        user = User.objects.get(id=user_id)
+# Normal API Services
+
+class normalServices:
+    def get_user(self, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+            return user
+        except User.DoesNotExist:
+            return {'error':'User does not exist'}
+
+    def get_all_users(self):
+        users = User.objects.all()
+        if len(users) > 0:
+            return users
+        else:
+            return {'message':'No users registered till now'}
+
+    def create_user(self, uname, email, fname, lname, url=None):
+        user = User.objects.create(username=uname, email=email, fname=fname, lname=lname)
+        user.save()
         return user
-    except User.DoesNotExist:
-        return {'error':'User does not exist'}
 
-def get_all_users():
-    users = User.objects.all()
-    if len(users) > 0:
-        return users
-    else:
-        return {'message':'No users registered till now'}
+    def update_user(self, pk, data):
+        user = self.get_user(pk)
+        if hasattr(user,'keys'):
+            return user
+        if data['username']:
+            user.username = data['username']
+        if data['email']:
+            user.email = data['email']
+        if data['fname']:
+            user.fname = data['fname']
+        if data['lname']:
+            user.lname = data['lname']
+        user.save()
+        return user
 
-def create_user(uname, email, fname, lname, url=None):
-    return User.objects.create(username=uname, email=email, fname=fname,lname=lname)
+    def delete_user(self, user_id):
+        User.objects.filter(id=user_id).delete()
+        return {'message':'User Deleted'}
 
-def update_user(pk, data):
-    user = User.objects.get(id=pk)
-    if data['username']:
-        user.username = data['username']
-    if data['email']:
-        user.email = data['email']
-    if data['fname']:
-        user.fname = data['fname']
-    if data['lname']:
-        user.lname = data['lname']
-    user.save()
-    return user
+NormalServices = normalServices()
 
-def delete_user(user_id):
-    User.objects.filter(id=user_id).delete()
-    return {'message':'User Deleted'}
+# Cache services
+
+class cacheServices:
+    def store_data_in_cache(self, pk, data):
+        if pk:
+            cache.set(pk, data, timeout=300)
+        else:
+            user = NormalServices.create_user(data['username'], data['email'], data['fname'], data['lname'])
+            cache.set(user.id, data, timeout=300)
+            return user
+
+    def retrieve_data_from_cache(self, pk):
+        data = cache.get(pk)
+        if data is not None:
+            # Data exists in cache
+            return data,True
+        else:
+            # Data doesn't exist in cache or has expired
+            try:
+                data = NormalServices.get_user(pk)
+                self.store_data_in_cache(pk,data)
+                return data,False
+            except User.DoesNotExist:
+                return {'error':'User Does Not Exist'}
+        
+
+# Sharding services
+
+class shardServices:
+    def get_user(self, pk):
+        try:
+            if pk % 2 == 0:
+                user = User.objects.using('shard_a').get(id=pk)
+            else:
+                user = User.objects.using('shard_b').get(id=pk)
+            return user
+        except User.DoesNotExist:
+            return {'error':'User Not Found'}
+
+    def get_all_users(self):
+        users_a = User.objects.using('shard_a').all()
+        users_b = User.objects.using('shard_b').all()
+        if len(users_a) > 0 or len(users_b) > 0:
+            return users_a, users_b
+        else:
+            return {'message':'No users registered till now'},{}
+    
+    def update_user(self, user, data):
+        if data['username']:
+            user.username = data['username']
+        if data['email']:
+            user.email = data['email']
+        if data['fname']:
+            user.fname = data['fname']
+        if data['lname']:
+            user.lname = data['lname']
+        user.save()
+        return user
+    
+    def store_data_in_cache(self, pk, data):
+        if pk:
+            cache.set('shard'+str(pk), data, timeout=300)
+        else:
+            user = NormalServices.create_user(data['username'], data['email'], data['fname'], data['lname'])
+            cache.set(user.id, data, timeout=300)
+            return user
+
+    def retrieve_data_from_cache(self, pk):
+        data = cache.get('shard'+str(pk))
+        if data is not None:
+            # Data exists in cache
+            return data,True
+        else:
+            # Data doesn't exist in cache or has expired
+            try:
+                data = self.get_user(pk)
+                self.store_data_in_cache(pk,data)
+                return data,False
+            except User.DoesNotExist:
+                return {'error':'User Does Not Exist'}

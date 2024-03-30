@@ -49,6 +49,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'users.middleware.RequestURL',
 ]
 
 ROOT_URLCONF = 'myproject.urls'
@@ -79,6 +80,22 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'SamaroTask',
+        'USER': 'postgres',
+        'PASSWORD': 'Alok@1234',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    },
+    'shard_a': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'Shard_A',
+        'USER': 'postgres',
+        'PASSWORD': 'Alok@1234',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    },
+    'shard_b': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'Shard_B',
         'USER': 'postgres',
         'PASSWORD': 'Alok@1234',
         'HOST': 'localhost',
@@ -141,3 +158,5 @@ CACHES = {
         'LOCATION': 'C:/Personal Data/Codes/Samaro-Task/myproject/users/cache',  # Path to the directory where cached data will be stored
     }
 }
+
+DATABASE_ROUTERS = ['users.db_router.DatabaseRouter']
