@@ -5,7 +5,6 @@ from django.urls import reverse
 from ..models import User
 from ..serializers import userSerializer
 
-# initialize the APIClient app
 client = Client()
 
 class normalTest(TestCase):
