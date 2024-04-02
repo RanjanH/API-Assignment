@@ -86,13 +86,15 @@ class caching(APIView):
         except:
             raise BadRequest('Invalid request.')
         
+    def put(self, request, pk):
+        data,flag = CacheServices.retrieve_data_from_cache(pk=pk)
+        if hasattr(data,'keys'):
+            return Response(data)
+        user = CacheServices.update_user_cache(pk, request.data)
+        return Response(user)
+        
     def delete(self, request, pk):
-        try:
-            User.objects.get(id=pk)
-            return Response(NormalServices.delete_user(pk))
-        except User.DoesNotExist:
-            return Response({'error':'User does not exist'})
-
+        return Response(CacheServices.delete_user_cache(pk))
 
 # Sharding API
 class sharding(APIView):
@@ -136,11 +138,11 @@ class sharding(APIView):
                 raise BadRequest('Invalid request.')
             
         def put(self, request, pk):
-            user = shardServices.get_user(pk)
+            user = ShardServices.get_user(pk)
             if hasattr(user,'keys'):
                 return Response(user)
             data = request.data
-            user = shardServices.update_user(user, data)
+            user = ShardServices.update_user(user, data)
             return Response({'message':'User Updated successfully', 'username':user.username,'fname':user.fname,'lname':user.lname})
             
         def delete(self, request, pk):
@@ -162,7 +164,7 @@ class sharding(APIView):
             if pk:
                 data,flag = ShardServices.retrieve_data_from_cache(pk=pk)
                 if hasattr(data,'keys'):
-                        return Response(data)
+                    return Response(data)
                 serialized = userSerializer(data)
                 return Response([serialized.data,{'Found in cache':flag}])
             else:
@@ -182,8 +184,12 @@ class sharding(APIView):
                 raise BadRequest('Invalid request.')
             
         def delete(self, request, pk):
-            try:
-                User.objects.get(id=pk)
-                return Response(NormalServices.delete_user(pk))
-            except User.DoesNotExist:
-                return Response({'error':'User does not exist'})
+            return Response(ShardServices.delete_user_cache(pk))
+
+        def put(self, request, pk):
+            data,flag = ShardServices.retrieve_data_from_cache(pk=pk)
+            if hasattr(data,'keys'):
+                return Response(data)
+            user = ShardServices.update_user_cache(pk, request.data)
+            serialized = userSerializer(data)
+            return Response(serialized.data)

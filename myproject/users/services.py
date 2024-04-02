@@ -1,5 +1,6 @@
 from .models import User
 from django.core.cache import cache
+from time import sleep
 
 # Normal API Services
 
@@ -62,12 +63,24 @@ class cacheServices:
             return data,True
         else:
             # Data doesn't exist in cache or has expired
-            try:
-                data = NormalServices.get_user(pk)
-                self.store_data_in_cache(pk,data)
-                return data,False
-            except User.DoesNotExist:
-                return {'error':'User Does Not Exist'}
+            data = NormalServices.get_user(pk)
+            if hasattr(data,'keys'):
+                return data
+            self.store_data_in_cache(pk,data)
+            return data,False
+            
+    def update_user_cache(self, pk, data):
+        self.delete_user_cache(pk)
+        NormalServices.update_user(pk, data)
+        user = self.retrieve_data_from_cache(pk)
+        return user
+            
+    def delete_user_cache(self, pk):
+        if cache.get(pk) is not None:
+            cache.delete(pk)
+            return {'message':'Deleted user data from cache'}
+        else:
+            return {'message':'User data does is not stored in cache'}
         
 
 # Sharding services
@@ -112,7 +125,7 @@ class shardServices:
             return user
 
     def retrieve_data_from_cache(self, pk):
-        data = cache.get('shard'+str(pk))
+        data = cache.get('shard' + str(pk))
         if data is not None:
             # Data exists in cache
             return data,True
@@ -124,3 +137,17 @@ class shardServices:
                 return data,False
             except User.DoesNotExist:
                 return {'error':'User Does Not Exist'}
+            
+    def delete_user_cache(self, pk):
+        if cache.get('shard' + str(pk)) is not None:
+            cache.delete('shard' + str(pk))
+            return {'message':'Deleted user data from cache'}
+        else:
+            return {'message':'User data does is not stored in cache'}
+        
+    def update_user_cache(self, pk, data):
+        print(self.update_user(self.get_user(pk), data))
+        self.delete_user_cache(pk)
+        user,flag = self.retrieve_data_from_cache(pk)
+        print(flag)
+        return user
