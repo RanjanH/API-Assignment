@@ -1,6 +1,6 @@
 # API Assignment
 
-This is an assignment to create an API with 3 different implementations. It is developed using Django.
+This is an assignment to create an API with 3 different implementations using url. It is developed using Django.
 
 It is an API with three main URL.
 
