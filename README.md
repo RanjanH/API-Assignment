@@ -4,7 +4,7 @@ This is an assignment to create an API with 3 different implementations using ur
 
 It is an API with three main URL.
 
-### Wherever there is an <int> in the url you are supposed to replace it with the user_id
+### Wherever there is an < int > in the url you are supposed to replace it with the user_id
 
 ## `\normal\` - Implementation of ORM on PostgresSQL database. 
 - It has 4 defined methods - get, post, put, delete.
