@@ -1,8 +1,8 @@
-# Take Home Task from Samaro.AI
+# API Assignment
 
-This is a take home project given to me by Samaro. It is developed using Django.
+This is an assignment to create an API with 3 different implementations. It is developed using Django.
 
-It is an API with three main URL
+It is an API with three main URL.
 
 ### Whereever there is an <int> in the url you are supposed to replace it with the user_id
 
