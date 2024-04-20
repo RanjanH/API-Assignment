@@ -79,7 +79,7 @@ WSGI_APPLICATION = 'myproject.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'SamaroTask',
+        'NAME': 'your_database_name',
         'USER': 'postgres',
         'PASSWORD': 'your_password',
         'HOST': 'localhost',
